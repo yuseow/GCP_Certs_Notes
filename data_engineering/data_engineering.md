@@ -1,9 +1,12 @@
 # [WIP] GCP Data Engineering Notes
 
 ## Data Lifecycle and corresponding GCP services
-**Ingest** = Pub/sub, Dataflow, Composer, Storage Transfer Service, Application logs from App Engine/Compute Engine/ GKE
+**Ingest** = Pub/sub, Dataflow (Google's Apache Beam), Composer, Storage Transfer Service, Application logs from App Engine/Compute Engine/ GKE
+
 **Store** = Cloud storage, BigQuery, Bigtable, Cloud SQL, Firestore, Memorystore, Spanner
-**Process/Analyse** = Dataflow, Dataproc, BigQuery, Data Fusion, Dataprep, Data Loss Prevention API (DLP)
+
+**Process/Analyse** = Dataflow (Google's Apache Beam), Dataproc, BigQuery, Data Fusion, Dataprep, Data Loss Prevention API (DLP)
+
 **Explore/Visualise**= Datalab, Looker Studio, custom dashboards, etc
 
 ## Types of datas
@@ -24,6 +27,14 @@
   - GCP product for it: Bigtable, Firestore, Memorystore
 
 
+ACID Compliance in a database?:
+The presence of four properties — 
+1. atomicity: broken down into smaller parts
+2. consistency: only data which follows the appropriate data validation rules is permitted to be written to the database
+3. isolation: ability to concurrently process multiple transactions in a way that one does not affect another
+4. durability: make failures invisible to the end-user, e.g. in databases that possess durability, data is saved once a transaction is completed, even if a power outage or system failure occurs.
+
+[Link to explanation](https://mariadb.com/resources/blog/acid-compliance-what-it-means-and-why-you-should-care/)
 
 ## Types of windows
 Windows are good to group streaming data for processing. Group elements by timestamp. 
