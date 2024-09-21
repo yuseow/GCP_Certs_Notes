@@ -2,6 +2,23 @@
 
 ## Data Lifecycle and corresponding GCP services
 **Ingest** = Pub/sub, Dataflow, Composer, Storage Transfer Service, Application logs from App Engine/Compute Engine/ GKE
+**Store** = Cloud storage, BigQuery, Bigtable, Cloud SQL, Firestore, Memorystore, Spanner
+**Process/Analyse** = Dataflow, Dataproc, BigQuery, Data Fusion, Dataprep, Data Loss Prevention API (DLP)
+**Explore/Visualise**= Datalab, Looker Studio, custom dashboards, etc
+
+## Types of datas
+1. Structured
+- Highly organised, easily accessed, processed, analysed
+- Typically stored in relational databases
+- Adheres to pre-defined format or schema
+- e.g. transaction records, CRM system
+2. Unstructured
+- "free-form", lacks a predefined structure or schema
+- wide range of formats and types
+- e.g. text data, image, video data
+3. Semi-structured
+- No fixed schema or structure, but maybe some metadata that descrives the data and makes it easier to process
+- e.g. JSON, XML, YAML, sometimes data from NoSQL databases
 
 
 
