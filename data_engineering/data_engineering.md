@@ -12,13 +12,16 @@
 - Typically stored in relational databases
 - Adheres to pre-defined format or schema
 - e.g. transaction records, CRM system
+  - GCP product for it: BigQuery, Cloud SQL, Spanner
 2. Unstructured
 - "free-form", lacks a predefined structure or schema
 - wide range of formats and types
 - e.g. text data, image, video data
+  - GCP product for it: Cloud Storage
 3. Semi-structured
-- No fixed schema or structure, but maybe some metadata that descrives the data and makes it easier to process
+- No fixed schema or structure, but maybe some metadata that describes the data and makes it easier to process
 - e.g. JSON, XML, YAML, sometimes data from NoSQL databases
+  - GCP product for it: Bigtable, Firestore, Memorystore
 
 
 
