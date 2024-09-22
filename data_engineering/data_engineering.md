@@ -113,3 +113,33 @@ Terms:
 - Subscriber: an entity that receives and processes the messages. listens for new messages being receivd by pub/sub and tells pub/sub that it received the message
 - Topic: a named resource which <ins>publishers</ins> sends messages. like a channel or category under which the messages are sent
 - Subscription: a named resource representing the stream of messages from a specific topic to a <ins>subscriber</ins> like signing up to receive all messages posted to a particular topic
+
+**Steps in pub/sub**
+1. Topic created within Pub/Sub
+2. Publisher sends a messenge to that topic, which Pub/Sub holds in queue to be served through a subscription
+3. Subscriber either pulls the messages from the Pub/Sub topic or has the message pushed to them by a Pub/Sub
+4. Subscriber acknowledges to Pub/Sub that it has received the message
+5. Pub/Sub deletes the message after the subscriber has acknowledged it
+
+**Push vs pull Subscriptions**
+- Pull: good for batch delivery, large volume of messages
+- Push: good for real-time streaming, low latency use cases
+  - to do push sub, the subscriber must be a webhook endpoint that accepts POST over HTTPS
+
+**Metrics for to monitor subscriber health**
+1. Total number of messages in the Pub/Sub queue
+- indicative of the overall load and throughput of the system. consistently high number can point to insufficient processing power on the subscriber's end or the publisher sending messages at a rate that the subscribers can't handle.
+2. Oldest unacknowledged message
+
+**Using Kafka with Pub/Sub**
+- May need to use when there are hybrid workloads (connecting on-prem database to GCP), collect logs from on-prem kafka and send to GCP for analysis or have an app in GCP but alsp store data on-prem using Kafka
+- GCP has a Pub/Sub Group Kafka Connector to connect Kafka to GCP. 2 versions of the connector, from the perspective of the role Pub/Sub plays in the setup
+  - Source connector: reads messages from a Pub/Sub topic and publishes them to Kafka
+  - Sink connector: reads messages from 1 or more Kafka topics and publishes them to Pub/Sub
+
+**Additional Pub/Sub Feature**
+
+**Seek** feature: Allows you to change the acknowledgement state of messages, including already-acknowledged messages in bulk. can replay previously acknowledged messages and snapshot to specific time
+- Seeking to a <ins>snapshot</ins> allows you to return to the message acknowledgement state of a subscription
+- Seeking to a <ins>time</ins> marks every message received before the time as acknowledged and every message after the time as unacknowledged
+- can set a topic message retention policy. max and default is 7 days
