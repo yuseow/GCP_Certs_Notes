@@ -36,6 +36,17 @@ The presence of four properties —
 
 [Link to explanation](https://mariadb.com/resources/blog/acid-compliance-what-it-means-and-why-you-should-care/)
 
+## Apache vs GCP tools
+| Open Source                        | GCP Tool             |
+|-------------------------------------|----------------------|
+| Apache Kafka                        | Cloud Pub/Sub        |
+| Apache Beam                         | Cloud Dataflow       |
+| Apache Hadoop and Apache Spark      | Cloud Dataproc       |
+| Apache HBase                        | Cloud Bigtable       |
+| Apache Hive                         | BigQuery             |
+| Apache Airflow                      | Cloud Composer       |
+
+
 ## Types of windows
 Windows are good to group streaming data for processing. Group elements by timestamp. 
 When your data is generated, it will have a timestamp. But the time when the data is generated may not be the time that your pipeline receives that data. Hence there is a need to separate "event time" from "processing time".
@@ -43,3 +54,22 @@ When your data is generated, it will have a timestamp. But the time when the dat
 - Fixed Windows
 - Sliding Windows
 - Session Windows
+
+
+## IAM - Identity Access Management
+Principal = entity that can be granted access to GCP resources
+
+Typers of Principals:
+1. User accounts (associated with a human, used for accessing cloud services, authentication done via username/pwd)
+2. Service accounts (used by applications to enable automated/scheduled tasks, authentication done via keys/tokens)
+   - 2 types of service accounts: google managed (automatically created by Google) or user-managed (created by user, usually has the domain @[project-id].iam
+  
+There's "roles" (collection of permissions), "permissions" (granular action that can be taken).
+3 types of roles:
+- basic roles: broad permissions at project level
+  - owner
+  - editor
+  - viewer
+- predefined: more specific and tailored for common use cases and job functions --> set and suggested by Google
+  - Specific to a given GCP service or API, correlates to common roles/use cases, intended to minimise overhead while reducing security risk
+- custom:
