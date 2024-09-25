@@ -143,3 +143,68 @@ Terms:
 - Seeking to a <ins>snapshot</ins> allows you to return to the message acknowledgement state of a subscription
 - Seeking to a <ins>time</ins> marks every message received before the time as acknowledged and every message after the time as unacknowledged
 - can set a topic message retention policy. max and default is 7 days
+
+## Parallet Data Processing - Cloud Dataflow
+- Dataflow is the GCP managed version of Apache BEAM (aka **B**atch/str**eam**). It is auto-scaling, serveless/no-ops.
+- Natively integrates with Pub/Sub, BigQuery
+- Connectors available for Bigtable, Apache Kafka
+- Pipelines must be located with a single region
+
+**Key Terms**
+Element = single entry of data (i.e. a row of data)
+PCollection = Distributed data set, data input and output
+ParDo = a type of transform applied to individual elements. ParDo is good for filtering/extracting elements from a large group of data
+Transform = processing operation applied to data
+
+
+types of windows to handle streaming data:
+1. Tumbling windows (aka fixed windows)
+  - fixed duration, non-overlap, sequential
+2. Hopping windows (aka sliding windows)
+  - overlap, has a frequency (called a hop interval), fixed duration (e.g. each window is 30s, but refresh/hop every 10s)
+  - for fast based, time sensitive data to ensure there is the most up-to-date data (aka stock analysis)
+3. session-based windows
+  - irregular/dynamic duration, based on how long the session is
+  - as long as the event happened within a designated gap threshold (e.g. 5 min threshold) as long as the interval between each event is lesser than the threshold, it will be classified as the same session
+  - e.g. clicks in a websession
+
+
+**Other Dataflow concepts you should know**
+- Watermarks = timestamps that keep track of progress in your pipeline
+  - If a step fails or stalls, the watermark does not advance
+  - Watermarks are timestamps that help track the progress of data processing in a pipeline. They essentially tell the system how far along the stream of data it has processed. If a step in your data pipeline fails or stalls, the watermark does not move forward, meaning that the system recognizes that certain data hasn't been processed yet. This helps ensure that no data is left behind or processed out of order.
+  - Example: If your data is streaming from multiple sources with different latencies, the watermark ensures that you don’t process data from one source too early before data from slower sources has arrived.
+- Triggers = conditions that determine when the aggregated results of data, such as those in a window, should be emitted/outputted, esp in systems with unbounded data
+  - Especially important in unbounded/streaming data pipelines
+  - Triggers are the conditions that determine when data (usually aggregated or transformed data) is outputted from the system, especially in streaming systems. Triggers decide at what point the aggregated data (like data grouped by time windows) should be emitted.In unbounded or streaming pipelines, you can't wait forever to process data, so you need to decide how often or under what conditions to output the results (e.g., after a certain time window, after receiving a certain number of elements, etc.).
+  - Example: Imagine you're counting the number of events per minute (time window). A trigger might decide to emit the count every minute, or every time a batch of 100 events arrives, or some other custom condition. Triggers can be tuned to fit the needs of the pipeline (early results, late results, etc.).
+  - Triggers are especially important in unbounded or streaming pipelines because these pipelines handle continuous data streams that don’t have a natural endpoint. Therefore, you need a way to decide when to finalize or partially emit results without waiting for all data to arrive (which might never happen).
+
+## Scaling 
+Horizontal scaling: increasing the number of nodes/workers (vs Vertical scaling which is to add more compute to existing nodes)
+
+## Preventing Fusion
+Fusion: Dataflow may combine several steps of the pipeline into one (do all the steps together)
+
+However it might not always be efficient for fusion to happen cause it might think a task is smaller than it really is, and affect how it distributes tasks to the workers.
+
+Techniques to overcome fusion (to optimise worker usage, hence speeding the ops up):
+- GroupByKey + Ungroup: group the data and immediately separate it again. forces Dataflow to treat the data as more significant and not combine the steps
+- SideInput: take the data an expand into a sideinput for another operations. forces Dataflow to take a detour rather than doing and combining the next steps. Refers to a secondary data source that is used alongside the main input in a transform. Allows additional data to be accessed and used within the transformation process
+- Reshuffle: rearranges data, hence acts a break in the pipeline that stops Dataflow from combining steps. will help to ensure that each datapoint is unique?
+
+## Dataflow Best Practices 
+- **Catching errors**: Catch errors within the pipeline by using a try-catch, and then output the errors to a new PCollection. Send the PCollection somewhere, such as Pub/Sub, for later analysis.
+- **Missing messages**: If you notice some messages are missing from your pipeline, you can run a batch of the streaming data and check the output.
+- **Out-of-order data**: Use a combination of windows, watermarks, and triggers to logically separate your time windows, determine when the results were generated/submitted to Dataflow, allow stragglers to catch up, and decide when you should emit them.
+- **Updating a pipeline**: When you need to update Dataflow pipelines with new code, do "update job." This technically creates a new job with the same name but a new jobID.
+  - GCP will perform a compatibility check, so you have to make them compatible with a "transform mapping" JSON file that you provide. It maps old job transforms to new job transforms.
+ 
+## When to use Dataflow vs Dateproc
+Datapro when:
+- have dependencies on specific tools/packages in the Hadoop/Spark ecosystem
+- favour a DevOps/hands-on approach to operations over a serverless one
+
+Dataflow when:
+- no existing Hadoop/Spark ecosystem
+- prefer a serverless/hands-off approach to ops
