@@ -201,10 +201,68 @@ Techniques to overcome fusion (to optimise worker usage, hence speeding the ops 
   - GCP will perform a compatibility check, so you have to make them compatible with a "transform mapping" JSON file that you provide. It maps old job transforms to new job transforms.
  
 ## When to use Dataflow vs Dateproc
-Datapro when:
+Dataproc when:
 - have dependencies on specific tools/packages in the Hadoop/Spark ecosystem
 - favour a DevOps/hands-on approach to operations over a serverless one
 
 Dataflow when:
 - no existing Hadoop/Spark ecosystem
 - prefer a serverless/hands-off approach to ops
+- generally better option
+
+
+# Dataproc: ondemand, managed version of Apache Hadoop and Spark
+MapReduce: Hadoop function to distributed/parallel compute to process large data in parallel. 
+- Map phase: input data divided into smaller chunks, each chunk processed by a map function that transform the data to a key, value pair
+- Shuffle phase: key-value pairs are grouped by keys and sent to different reduce nodes
+- Reduce phase: reduce function applied key-values pairs in the reduce nodes to aggregate the values together under the same key to produce a final results (combine all the values of same keys together)
+
+**Storing data for Dataproc jobs**
+- when moving from Hadoop or Spark to Dataproc, usually good to store data in Google Cloud storage and jobs on the Dataproc cluser
+- Possible exceptions depending on the type of data you work with:
+  - Apache HBase data to Bigtable (fully managed no-sql database service designed for large analytical and operational workload)
+  - Apache Impala data to BigQuery (serverless multi-cloud data warehouse, sql-based)
+ 
+**Configuring a Dataproc cluster**
+Choose: 
+- region & zone
+- cluster mode (# of masters and # of workers)
+  - Single node: 1 master, 0 workers
+  - Standard node: 1 master, custom no. of workers
+  - High availability: 3 masters, custom no. of workers
+- Disk size for master and worker nodes
+- Local SSD size (cannot be changed)
+- no. of preemptible nodes/VMs
+  - (aka on-demand VMs that are lower in cost than standard VMs but are short-lived and can be claimed by GCP whenever there is a demand from a more higher paying customer. need min 2 worker nodes. best used for compute-intensive tasks that are resilient to interruptions and do not require persistent storage. Dataproc manages the entire leave/join process of preemptible VMs without configuration required. will help jobs to reduce time
+- cloud storage bucket for staging
+
+After a Dataproc cluster is created, can change:
+- no. of workers and preemptible VMs
+- labels of cluster
+- toggle graceful decommissioning
+resharding of data is handled automatically when you update a dataproc cluster
+
+**Cluster migration best practices**
+- move the data first (usually GCS)
+- perform small-scale testing on a sub-set of data first
+- think in terms of ephermeral clusters (delete cluster when done)
+- Use GCP tools to optimise and save costs
+- eventual goal should be to move towards a cloud-native and serverless architecture
+
+Type of Apache data to Dataproc:
+HDFS => GCS
+Hive => BigQuery
+Impala => BigQuery
+HBase => Bigtable
+
+**Ways to optimisze Dataproc cluster performance**
+- Place Dataproc cluster in same region as storage bucket that has your data (less egress/ingress)
+- Increase size of persistent disk for better performance
+- Consider SSD over HDD (more expensive though)
+- Allocat more VMs (choose preemptible VMs to save on costs, but this option will cost more than increasing disk size though)
+
+**Dataproc IAM roles**
+- Editor (full access to create/delete/edit clusters, jobs, workflows)
+- Viewer (view access only)
+- Workers (for service accoounts to read/write cloud storage and write to cloud logging)
+^ can only be defined on project level
