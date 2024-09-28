@@ -266,3 +266,46 @@ HBase => Bigtable
 - Viewer (view access only)
 - Workers (for service accoounts to read/write cloud storage and write to cloud logging)
 ^ can only be defined on project level
+
+## Google Cloud Storage (GCS)
+Stores in buckets, all kinds of files are called "objects". Similar to blob storage/S3
+
+**Storage class vc Costs:**
+Consider storage duration and access frequency. Lower frequency access options, lower costs, but higher retrieval costs
+
+- Standard: Access whenever, $0.02/GB --> frequency access
+- Nearline: 30 days min storage (aka recommended to store at least 30 days. if you take your data out before that, you are still charged the full price), $0.01/GB
+- Coldline: 90 days min storage, $0.004/GB
+- Archive: 365 days min storage, $0.0012/GB --> least accessible, lowest cost but higher retrieval fee
+
+**Bucket management and data locality**
+- Buckets act as primary storage containers
+- location options when setting up a bucket:
+  - regional (will be in at least 2 separate zones in the same region)
+  - dual-regional 
+  - multi-regional (can be across diff countries, good for global companies)
+- Optimised for latency and durability
+
+**Accessing and using GCS**
+- can use to access via: UI, API, SDKs, gsutil
+- Features:
+  - parallel uploads for large amounts of data --> optimise upload process and data transfer
+  - requester-pays model good for sharing public datasets
+  - integrity checks --> ensure data integrity with built in validation mechanisms. md5 crc32c hash can be pre-calculated and uploaded together for post upload verification (to ensure no data loss)
+  - transcoding --> gzip transcoding to enable storage in compress format and automatically decompress on retrieval providing the users with the original file format
+ 
+**Lifecycle Management**
+- Transition rules based on conditions from 1 storage class to another (e.g. auto-archive older files)
+- Cost reduction through automated management
+- Deleting outdated or unnecessary data
+
+**Access control**
+- can have signed url access (time-based, got expiration, good for temporary access)
+- IAM on project level
+- ACL on specific buckets
+- complete control over data access permissions
+
+**Roles in data pipelines**
+- can also automatically trigger processes in other GCP services (e.g. cloud functions, pub/sub)
+- GCS as a dynamic component of data pipelines
+- workflow initiation upon data arrival
