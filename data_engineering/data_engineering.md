@@ -309,3 +309,22 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - can also automatically trigger processes in other GCP services (e.g. cloud functions, pub/sub)
 - GCS as a dynamic component of data pipelines
 - workflow initiation upon data arrival
+  
+# Bigquery
+Backups
+- Automatic Replication
+Data is automatically replicated across multiple locations
+Ensures high availability and durability.
+- Disaster Recovery
+Managed by Google for large-scale system failures
+Not intended for individual user errors oraccidental deletions.
+Time Travel
+Query snapshots of data from the past 7 days.
+Restore tables to previous states within this period.
+Snapshot Tables
+Create manual snapshots for long-term backups.
+Useful for archives beyond the 7-day time travel window.
+Export Data for Backup
+Export tables to Google Cloud Storage.
+Formats include CSV,JSON, and Avro.
+Note: No traditional backup-and-restore functionality.
