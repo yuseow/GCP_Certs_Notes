@@ -338,5 +338,5 @@ Note: No traditional backup-and-restore functionality.
 - Streaming ingest is expensive
 - Better to have more, smaller tables than fewer, larger tables
 - When joining tables, use INNER JOIN instead of WHERE. Using WHERE creates more variable combinations,more computation needed
-- Use expiration settings
-- Take advantage of long-term storage
+- Use expiration settings for tables to delete old data that u don't need
+- Take advantage of long-term storage data pricing for data that are not accessed regularly
