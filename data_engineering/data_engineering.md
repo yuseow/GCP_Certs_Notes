@@ -328,3 +328,15 @@ Export Data for Backup
 Export tables to Google Cloud Storage.
 Formats include CSV,JSON, and Avro.
 Note: No traditional backup-and-restore functionality.
+
+# BigQuery best practices
+- Instead of using SELECT*, specify the columns you need
+- Pay attention to the size of the query before running it. BQ charges based on the size of the DATA PROCESSED
+- Remember: LIMIT and HAVING do not reduce costs, but WHERE does (limit and having dont return all values but you are still charged for it)
+- Establish the logic of youir query on small subsets of your data first
+- Save intermediate tables and then query those instead
+- Streaming ingest is expensive
+- Better to have more, smaller tables than fewer, larger tables
+- When joining tables, use INNER JOIN instead of WHERE. Using WHERE creates more variable combinations,more computation needed
+- Use expiration settings
+- Take advantage of long-term storage
