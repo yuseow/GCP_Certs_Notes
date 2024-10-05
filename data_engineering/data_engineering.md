@@ -310,33 +310,70 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - GCS as a dynamic component of data pipelines
 - workflow initiation upon data arrival
   
-# Bigquery
-Backups
-- Automatic Replication
-Data is automatically replicated across multiple locations
-Ensures high availability and durability.
-- Disaster Recovery
-Managed by Google for large-scale system failures
-Not intended for individual user errors oraccidental deletions.
-Time Travel
-Query snapshots of data from the past 7 days.
-Restore tables to previous states within this period.
-Snapshot Tables
-Create manual snapshots for long-term backups.
-Useful for archives beyond the 7-day time travel window.
-Export Data for Backup
-Export tables to Google Cloud Storage.
-Formats include CSV,JSON, and Avro.
+# Bigquery (BQ)
+**Types of Backups**
+1. Automatic Replication: Data is automatically replicated across multiple locations, ensures high availability and durability.
+2. Disaster Recovery: Managed by Google for large-scale system failures, not intended for individual user errors oraccidental deletions.
+3. Time Travel: Query snapshots of data from the past 7 days, restore tables to previous states within this period.
+4. Snapshot Tables: Create manual snapshots for long-term backups, useful for archives beyond the 7-day time travel window.
+5. Export Data for Backup: Export tables to Google Cloud Storage, Formats include CSV,JSON, and Avro.
+
 Note: No traditional backup-and-restore functionality.
 
-# BigQuery best practices
+**BigQuery best practices**
 - Instead of using SELECT*, specify the columns you need
 - Pay attention to the size of the query before running it. BQ charges based on the size of the DATA PROCESSED
 - Remember: LIMIT and HAVING do not reduce costs, but WHERE does (limit and having dont return all values but you are still charged for it)
 - Establish the logic of youir query on small subsets of your data first
 - Save intermediate tables and then query those instead
-- Streaming ingest is expensive
+- Streaming ingest is expensive --> if real time analytics is not important, consider batch loading instead
 - Better to have more, smaller tables than fewer, larger tables
-- When joining tables, use INNER JOIN instead of WHERE. Using WHERE creates more variable combinations,more computation needed
+- When joining tables, use INNER JOIN instead of WHERE. Using WHERE creates more variable combinations,more computation needed. Inner join can be more efficient in processing only the mapped rows
+- For table design, better to have smaller more numerous tables than larger and fewer ones. smaller tables has better cost savings
 - Use expiration settings for tables to delete old data that u don't need
-- Take advantage of long-term storage data pricing for data that are not accessed regularly
+- Take advantage of long-term storage data pricing for data that are not accessed regularly to reduce storage costs
+
+**BigQuery admin console**
+- slot capacity management: to monitor the capacity usage and the allocation of the capacity to ensure that all the applications have the resources they need. Important for flat rate pricing
+- policy tag taxonomies: classify and manage access to data by defining and applying policy tags, control who has access to sensitive data
+- Query INFORMATION_SCHEMA (its a metadatabase containing information about all other databases and tables) to get a sense of the performance of the jobs and how our queries are running over time.
+
+**BQ Views**
+1. Standard views: standard see the tables views, executes the underlying query-on-demand and show a virtual table representing stored SQL queries
+2. Materialised views: cached query results for faster performance, good for queries that are often used. automatically updated when base tables changes
+3. Authorised views: grant a specific view of the tables, control data access by excluding sensitive details. shares query results, not the raw data with the specified users
+4. Logical views (BI engine): virtual schema within BI engine for optimised performance, ideal for BI tools and connected sheets
+
+**BQ Roles**
+PROJECT LEVEL:
+- BQ Admin: full control over BQ resources
+- BQ User: create datasets, manage jobs
+- BQ Job User: run jobs & queries
+
+DATASET LEVEL:
+- BQ Data Owner: manage and share datasets/views
+
+DATASET / TABLE LEVEL:
+- BQ Data Editor: modify and delete table data
+- BQ Data Viewer: read-only access to the tables/views
+
+PROJECT/DATASET LEVEL:
+- BQ Metadata Viewer: access dataset/table metadata
+
+**BQ Slots**
+- unit of compute used by BQ to execute queries
+- key to determining performance and cost
+- slots are automatically assigned to queries
+- more slots = faster query execution but at higher costs
+
+<ins>Managing costs</ins>: 
+- can monitor the slots usage and adjust the queries or dataset partitions to ensure the slot utilisation is efficient. need to maintain cost and performance
+- knowing how many slots ur queries need, can optimise the data processing and manage the budget accordingly
+
+
+**Types of Slot Pricing Models**
+1. **on-demand pricing (default)**: per per query based on <ins>amount of data processed</ins>
+  - good for ad-hoc analytics, variable workloads
+  - pay for what you use, good for sporadic queries, when no service level agreement for production workload
+2. **flat-rate pricing**: purchase dedicated slot capacity
+  - Good for high and predictable workloads, some production workloads 
