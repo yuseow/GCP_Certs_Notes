@@ -476,12 +476,35 @@ configuring it correctly is important for performance, scalability and cost.
 - Bigtables are "sparse", empty cells don't cost any storage, hence cna create as many column qualifiers as you want without worrying about storage costs for unused cells. good for wide tables with many options on columns
 
 **Salting in Bigtable**
-- technique to prevent hotspots
+- technique to improve the distribution of read and write operations across Bigtable nodes, to prevent hotspots. In Bigtable, distribution is based on the row key
 - Hotspot Prevention: Salting distributes read/write operations evenly to avoid overloading nodes.
-- Data that are more similar will be grouped together on the same node. hence to disperse data distribution, can add a random prefix to row keys for a more uniform data spread across nodes. Else if this data is very frequently queried, it can result in hotspot.
+- Row key data that are more similar will be grouped together on the same node. hence to disperse data distribution, can add a random prefix to row keys for a more uniform data spread across nodes. Else if this data is very frequently queried, it can result in hotspot.
 - Row Key Randomization: Utilizes random numbers or hash values as prefixes (or timestamps?), so rows that are usually going to be adjacent will be split up
 - Load Balancing: Enhances performance by preventing skewed loads on individual nodes. hence the idea for salting is to scatter the data that are frequently queried to prevent hotspot
 - Considerations for Use:
-  - Access Patterns: Salting strategy should align with expected data access patterns.
-  - Range Queries Impact: Can complicate range queries due to non-sequential row keys.
-  - Strategic Implementation: Must be carefully planned to balance load distribution and query efficiency.
+  - Access Patterns: Salting strategy should align with <ins>expected data access patterns</ins>
+  - Range Queries Impact: Can complicate range queries due to non-sequential row keys
+  - Strategic Implementation: Must be carefully planned to balance load distribution and query efficiency. Salting can prevent hotspots but it can make queries less efficient if you distribute the data non-strategically
+ 
+**Field promotion in Bigtable**
+- A design strategy where certain fields from the data model are included in the row key to enable efficient access
+- Purpose of Field Promotion: Enhances query efficiency by including important fields in the row key.
+- Access Pattern Optimization: Aligns row key design with common query filters for faster data retrieval.
+- Row Key Structure: Incorporates critical fields into a compound row key to avoid full table scans (aka combine a few columns together together to form the row key)
+- Design Considerations:
+  - Balance between read optimization and write performance --> while field promotion might improve read, it may result in read complexities
+  - Anticipate growth in data volume and access complexity.
+  - Query Performance: Significantly reduces latency for filtered queries on promoted fields.
+  - Schema Strategy: Requires thoughtful planning to ensure scalability and maintain performance over time.
+
+LIKE SALTING, FIELD PROMOTION REQUIRES GOOD UNDERSTANDING OF THE ACCESS PATTERN (aka query pattern). what kind of queries and how often those queries are done are important for the design. It can affect the database performance and the complexities of the data model.
+
+**Bigtable key visualizer**
+- Interactive access pattern monitoring tool, gain insights on how usage is affecting the database perfomance and table proactive measures to ensure the database scales efficiently
+- Heatmap Visualizations: Displays intensity of read/write operations across row keys
+- Hotspot Detection: Identifies concentrated areas of high activity within your table
+
+## BigQuery Omni *LIKELY TO COME OUT FOR EXAM!*
+- intended to unify multi-cloud analytics. cause most companies now use more than 1 cloud provider, and they wanna see the analytics across
+- core feature: ability to analyse data across GCP, AWS, Azure without moving data
+- power by Google Cloud's Anthos, facilitating a seamless multi-cloud experience
