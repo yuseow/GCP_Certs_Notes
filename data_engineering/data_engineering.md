@@ -311,6 +311,49 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - workflow initiation upon data arrival
   
 # Bigquery (BQ)
+- fully managed and serveless relational database
+- BQ is a database optimised for extremely fast read operations and analytical queries.
+- BigQuery is a fully-managed, serverless data warehouse that is designed to be extremely fast at read operations, particularly large-scale analytical queries. This is achieved through its columnar storage format and massively parallel processing.
+- Updates, or writes, are slower in comparison to reads because BigQuery is optimized for append-mostly scenarios and is not intended for transactional workloads that require rapid updates. For use cases involving frequent writes or updates in a relational database, Google Cloud recommends using Cloud SQL or Spanner, which are optimized for transactional workloads and support high-throughput writes and updates.
+- accepts both batch and streaming loads
+- uses standard SQL (or legacy SQL, but not recommended for new projects. mainly there for backwards compatibility)
+
+- The BigQuery Transfer Service is designed to automate data import from Software as a Service (SaaS) applications, specifically Google advertising platforms such as Google AdWords, DoubleClick, and YouTube, into BigQuery. This service simplifies the process of integrating advertising data into BigQuery, enabling seamless and recurrent data transfers. The service is particularly tailored to work with Google's advertising services, thereby making it easy to analyze advertising data alongside other data sources within BigQuery. This integration is not about exporting data from BigQuery, migrating on-premises databases, or backing up datasets, but rather about importing and synchronizing data from specific Google services.
+
+- Federated table: query directly from external sources like google drive, cloud or BigTable. Hence able to have real time analysis without storage costs. need to set up a schema to map to the external data structure so BQ knows how to map the data. governed by the BQ access permissions
+- Looker studio is GCP's free BI and data visualisation tool.
+  - results generated in BQ can be immediately explored with charts
+  - alternatively, set up BQ tables as data sources in Looker Studio and write queries/views in Looker Studio UI
+
+**Ways to Access BQ**
+- cloud console
+- BQ command line tool
+- client libraries (GO, python, Java, Node.js, PHP, Ruby, C#)
+
+**Ways to Load data into BQ**
+- **Web UI**: Upload small datasets directly.
+- **BQ Command-Line**: Automate uploads from local or cloud storage.
+- **Cloud Console**: Import via browser from local or Google Cloud Storage.
+- **BigQuery API**: Stream in real-time or batch load programmatically.
+- **Storage Transfer**: Move <ins>large volumes from online sources</ins> like Amazon S3.
+- **Dataflow**: ETL operations and streaming data processing.
+- **Data Transfer Service**: Schedule data imports from SaaS applications.
+- **Cloud Dataprep**: Clean and prepare data for analysis.
+- **Streaming Inserts**: Real-time data capture and analysis.
+- **Database Transfer Service**: Migrate data <ins>from on-premises or Cloud SQL</ins>.
+- **Federated Queries**: Query external sources without loading.
+
+When considering which way to load data, consider the size of the data, the need for real time updates, and complexity of the transformations
+
+**Nested tables**
+- Nested tables is a structure that a single table can create sub-tables, allowing the storage of hierachical data in a single column. similar to having a table within a table.
+- Hierarchical Data: Store complex data hierarchies within single rows.
+- implemented using RECORD/STRUCT Data Types: Define sub-tables within a column. Define a schema within a schema where 1 field can contain a repeated set of fields. useful for 1:many relationships.
+- Efficient Queries: Use **UNNEST** to flatten nested data for analysis.
+- Performance Advantage: Columnar storage reduces data scan costs.
+- Simplified Management: Avoids multiple tables and complex joins.
+- JSON Integration: Seamlessly maps JSON structures to nested fields.
+
 **Types of Backups**
 1. Automatic Replication: Data is automatically replicated across multiple locations, ensures high availability and durability.
 2. Disaster Recovery: Managed by Google for large-scale system failures, not intended for individual user errors oraccidental deletions.
@@ -339,6 +382,8 @@ Note: No traditional backup-and-restore functionality.
 - Query INFORMATION_SCHEMA (its a metadatabase containing information about all other databases and tables) to get a sense of the performance of the jobs and how our queries are running over time.
 
 **BQ Views**
+In BigQuery, a view is essentially a virtual table created by a query. Unlike physical tables that store data, views do not store data themselves. Instead, they represent the result of a query and can be queried against as if they were tables. This "query within a query" functionality makes views particularly useful for presenting a specific view of the data without altering the underlying tables. They provide a level of abstraction and can be used to restrict access to certain data, thus enhancing data security and management.
+
 1. Standard views: standard see the tables views, executes the underlying query-on-demand and show a virtual table representing stored SQL queries
 2. Materialised views: cached query results for faster performance, good for queries that are often used. automatically updated when base tables changes
 3. Authorised views: grant a specific view of the tables, control data access by excluding sensitive details. shares query results, not the raw data with the specified users
@@ -376,4 +421,41 @@ PROJECT/DATASET LEVEL:
   - good for ad-hoc analytics, variable workloads
   - pay for what you use, good for sporadic queries, when no service level agreement for production workload
 2. **flat-rate pricing**: purchase dedicated slot capacity
-  - Good for high and predictable workloads, some production workloads 
+  - Good for high and predictable workloads, some production workloads
+
+**FLAT-RATE CONFIGURATIONS**
+- Enterprise edition reservations: reserving a fixed number of slots with autoscaling options, e.g. baseline reservation with the ability to autoscale for peak demands
+- Autoscaling benefits:
+  - flexibility: scale up during peak ties and scale down during low usage
+  - cost efficiency: pay for extra slots only when needed
+ 
+**Cost Optimization Strategies**
+1. combining pricing models
+  - mixed approach: flat-rate fee for predictable workloads and on-demand for ad-hoc queries. (e.g. reserve slots for predictable production jobs and use on-demand pricing for analytics queries)
+2. Monitoring and adjustments
+  - regularly review/monitor usage and adjust reservations and strategies accordingly using BQ's built-in tools to track and manage slot utilisation
+
+<ins>**Exam tips here:**</ins>
+- **node outage will not affect BQ data cause storage and compute are separate in BQ.** Explanation: BigQuery is designed with a separation of storage and compute resources, which means that the data stored is independent of the compute resources used to process queries. In the event of node outages, the data within BigQuery would remain unaffected because it is not stored on the compute nodes themselves. This architecture enhances the reliability of data storage and ensures that data is not at risk during compute resource issues. Other options, such as complete data loss or temporary data unavailability, would be consequences of a system where storage and compute are not decoupled. Slowing down query performance is more related to the availability of compute resources rather than the integrity of the data itself.
+
+## Bigtable
+- High performance, massively scalable NoSQL database
+- Other examples of NoSQL DBs: Redis, MongoDB, Cassandra, HBase, Firestore
+- Good for flexible data models, varied data types (aka the data doesn't always have the same keys/columns, unlike structured data)
+- Good for rapid read and write operations, hence good for high throughput analytics like stock data, time series data. Tables that follow this pattern tend to be tall and narrow
+- IT IS NOT NO OPS, NEED TO CONFIGURE THE INSTANCES etc
+- Need to establish row key carefully. Good row keys distribute the load across Bigtable's nodes, bad row keys lead to hotspotting (disproportionate load is handled by a small number of nodes, potentially impacting performance)
+- tables are sparse, empty cells table up no storage space. results in significant storage savings esp for datasets that have lots of optional fields
+- stores in key-value pair (think dictionary)
+- Developed internally for Google, then HBase (Hadoop, open source) was developed based on it. Now Bigtable works well with HBase, so devs can now migrate HBase workload to GCP managed Bigtable services without having to re-write their applications
+
+**Bigtable instance configuration**
+3 things to config when setting up:
+1. Instance type, either:
+ - Dev env suggestion: 1 node, low cost, no replication
+ - Prod env suggestion: 1+ clusters, 3+ nodes per cluster (for high availability and redundancy), replication available, throughput guarantee
+2. Storage type (HDD or SSD): SSD is amost always the right choice (quick retrieval and low latency operations), unless storing > 10TB of infrequently-access data and latency is not a concern
+3. Zone for cluster to be in (affects latency for users and also data residency requirements)
+
+Can interact wih Bigtable through cbt (commandline tool) or HBase shell. 
+configuring it correctly is important for performance, scalability and cost.
