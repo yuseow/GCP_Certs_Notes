@@ -459,3 +459,29 @@ PROJECT/DATASET LEVEL:
 
 Can interact wih Bigtable through cbt (commandline tool) or HBase shell. 
 configuring it correctly is important for performance, scalability and cost.
+
+**Bigtable Schema Design**
+- efficient schema design will affect how the DB scales and how quickly you can access the data in Bigtable
+- <ins>only the row key is indexed in Bigtable</ins>, so schema design is extremely important
+- recommended to promote all the fields you want to be able to query against into the row key itself
+- however need to be careful to avoid hotspotting (happens when a large amount of read/write targets a small amount of nodes, leading to potential bottlenecks):
+- Best pracs to avoid hotspot:
+  1. use reverse domain names (com.mywebsite.www) --> spreads out the write ops across the key space, else the "www" will make everything in the same instance/space 
+  2. timestamps, but don't put at the front of the row key so they all end up writing to the same instance. can consider pre-fixing them to the reverse domain name
+  3. string identifiers, but avoid monotonically increasing strings where those that would result in sequential access patterns as they can lead to hotspots
+- row keys to avoid:
+  1.  domain names that are not reversed (cause they are monotonically increasing, see point 3 above^)
+  2.  sequential numbers
+  3.  keys that need to be updated frequently --> leads to increase complexity in data management
+- Bigtables are "sparse", empty cells don't cost any storage, hence cna create as many column qualifiers as you want without worrying about storage costs for unused cells. good for wide tables with many options on columns
+
+**Salting in Bigtable**
+- technique to prevent hotspots
+- Hotspot Prevention: Salting distributes read/write operations evenly to avoid overloading nodes.
+- Data that are more similar will be grouped together on the same node. hence to disperse data distribution, can add a random prefix to row keys for a more uniform data spread across nodes. Else if this data is very frequently queried, it can result in hotspot.
+- Row Key Randomization: Utilizes random numbers or hash values as prefixes (or timestamps?), so rows that are usually going to be adjacent will be split up
+- Load Balancing: Enhances performance by preventing skewed loads on individual nodes. hence the idea for salting is to scatter the data that are frequently queried to prevent hotspot
+- Considerations for Use:
+  - Access Patterns: Salting strategy should align with expected data access patterns.
+  - Range Queries Impact: Can complicate range queries due to non-sequential row keys.
+  - Strategic Implementation: Must be carefully planned to balance load distribution and query efficiency.
