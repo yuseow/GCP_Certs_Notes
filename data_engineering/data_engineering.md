@@ -525,5 +525,173 @@ LIKE SALTING, FIELD PROMOTION REQUIRES GOOD UNDERSTANDING OF THE ACCESS PATTERN 
 - scalable and reliable infrastructure
 - integration with GCP services (e.g. BigQuery, Looker Studio, etc)
 
+![gcp_analytics_hub](images/gcp_analytics_hub.png)
+- flow: publisher > analytics hub > subscriber
+- has a publisher/subscriber model. subscriber will see a curated data that is linked to the publisher's. subscriber's data view will be read-only, and in subber's own VPC. 
+- for the subscribers, the data can be combined with their own dataset, and can be connected with various solutions from GCP or its patterns (as seen on the right). example of usage: a retailer wanna share forecast to their supplier/vendors on sales forecast or stocks
+- publisher can also add metadata to track subbers, see aggregated usage metrics and this makes the process transparent and efficient
+- has "Private Exchange feature"
+  - A secure, controlled environment for sharing sensitive data
+  - Benefits:
+    - Enhanced data privacy
+    - Controlled access to data assets
+    - Customizable sharing policies
+  - Use Cases:
+    - Sharing proprietary data within a company
+    - Collaborating with trusted partners on sensitive projects
 
-- has a publisher/subscriber model. subscriber will see a curated data that is linked to the publisher's
+**exam tip:**
+Choose analytics hub if:
+- Healthcare providers sharing patient data securely
+- Financial institutions collaborating on market research
+- Retail companies analyzing customer behavior data
+
+whenever:
+- You are sharing data with another organization
+- You are sharing sensitive data within your organization or a trusted partner
+
+## BigLake
+- integrates data lakes and data warehouses across GCP, AWS, Azure
+- another GCP offering for hybrid and multi-cloud solutions, aims to "break down data silos"
+- perform analytics regardless where the data is stored (even in other clouds)
+- not just analytics, but also applies other benefits of BQ:
+  - fine-grained security, performance, caching, sharing
+- able to maintain a single copy of data wherever it is and make it accessible across GCP and other open source tools (using BigLake connectors)
+- accessible through the BigQuery UI
+![biglake](images/gcp_biglake.png)
+- Granular security policies:
+  - able to set <ins>**table, row, or column** level access control, even if the data is stored in other clouds</ins>
+  - integrates with Dataplex, Data Catalog for data governance, management, etc
+- Advantage of BigLake tables over external tables:
+  - BigLake tables allows you to treat data as native
+  - Better performance
+  - More granular security and access control
+  - Integrated metadata caching (ex. table schemas, partition information, security policies) improve performance
+- Example business scenarios:
+  1. You have a multi-cloud environment with GCS and S3 buckets, and your team members need to analyze them without accessing the underlying storage buckets. What should you do?
+    - Ans: Set up a BigQuery Omni connection to the S3 bucket, and use BigLake tables over GCS and S3 data so that you can query them in BigQuery.
+  2. You have tables in AWS, Azure, and BigQuery for analytics purposes. You need to run daily queries without moving the data. What should you do?
+    - Ans: Set up a BigQuery Omni connection and BigLake tables.
+  3. Your company has data in GCS. You need to use Spark on this data and implement row-level security policies. Your solution should support a data mesh architecture. What should you do?
+    - Ans: Define a BigLake table. Create policy tags in Data Catalog. Add policy tags to the rows, and process with Spark-BigQuery connector. 
+  4. You've created an external table in BigQuery with data in a Cloud Storage bucket, using many files. The queries are slow, and you need to improve their performance. What should you do?
+    - Ans: Switch to a BigLake table and enable metadata caching. --> <span style="color:blue">**defining external tables (external to BQ) as a BigLake table actually improves performance!**</span>
+
+
+## Cloud Composer (aka Apache Airflow)
+- fully managed implementation of Apache Airflow (no-ops, Google manages it). 
+  - Cloud Composer is a fully managed service that is built on Apache Airflow. It provides a way for users to orchestrate their workflows, which can include anything from data processing tasks to automated infrastructure setup. Apache Airflow is an open-source tool designed to help developers orchestrate complex computational workflows, which can be a series of tasks that data must move through. As a managed service, Cloud Composer handles much of the operational overhead associated with setting up and managing an Airflow environment, which includes provisioning resources, scaling, monitoring, and ensuring reliability.
+- Airflow = open source programmatic framework to create, schedule, manage, monitor data workflows across clouds and on-prem data centres
+- is a built in orchestrating tool
+- Airflow is useful because:
+  - Big data pipelines are often a complex, multi-step process. Airflow ensures that the creation of the resources in every step that the next step depends on is created in the right order.
+  - Must create resources in multiple services
+  - Complex dependencies between steps is respected
+  - Remove resources automatically when task is completed
+  - Need central view for entire team to have visibility --> able to have better tracking and transparency
+  - Complex, time-based or event-driven scheduling --> can have different triggers
+- Airflow's design principle is centered on configuration as code, meaning that the workflows are defined as code and thus benefit from version control, testing, and collaboration.
+- DAGs: Directed Acyclic Graph (visual representation of the flow chart of the steps)
+  - Directed Acyclic Graphs (DAGs) are the fundamental building blocks in Cloud Composer that enable users to manage and orchestrate workflows precisely. A DAG represents a sequence of tasks along with their interdependencies, which ensures that they are executed in a clear and logical order. This structure is crucial for accurately defining the steps involved in a workflow and the conditions under which each step should be executed. The acyclic nature of a DAG means that it does not loop back on itself, ensuring that the workflow progresses forward without any circular dependencies, which could cause errors or never-ending loops.
+  - DAGs in Cloud Composer not only allow for the **mapping out of the entire lifecycle of data processing** tasks from ingestion to analysis but also **automate the scheduling and execution** of these tasks. This is crucial because it ensures that workflows are not just conceptual but are practically implemented and maintained within the system. The automation of these tasks ensures precision and timeliness in execution, moving beyond the simple transfer of data to a more sophisticated sequence of operations. The visual representation provided by DAGs helps team members understand and communicate the workflow process more effectively, while the automation ensures that these operations are triggered as needed, keeping data fresh and insights timely.
+- CLOUD COMPOSER = Apache Airflow + Google Kubernetes Engine + Cloud Storage
+  - Apache Airflow allows users to design and schedule complex data workflows. 
+  - Google Kubernetes Engine ensures that these workflows run in a secure environment that can scale as needed. 
+  - Cloud Storage provides a reliable place for the persistent storage of artifacts that are generated or used by the workflows.
+
+
+## Cloud Workflows
+- Fully0mamanged service that allows orchestration and automation of the execution of GCP services and HTTP-based APIs in a reliable, scalable, and serverless manner
+- Enables sequencing and execution of multiple cloud tasks, e.g.:
+  - Calling a Cloud Function
+  - Triggering a Cloud Run service
+  - Making an API call to a Google Cloud service like BigQuery or Cloud Storage
+  - Running a custom script or command on a Compute Engine instance
+  - And many other operations within the Google Cloud ecosystem
+- serverless
+- built-in mechanisms for managing failures and retries
+- scales automatically
+- offers a visual graphical interface for workflow creation and monitoring
+  - yaml file based, similar to github actions?
+![cloud workflow](images/gcp_cloud_workflows.png)
+
+### Cloud Workflows vs Cloud Composer vs Cloud Functions
+|Cloud Workflows|Cloud Composer | Cloud Functions|
+|---|---|---|
+|- Microservices orchestration</br>- Serverless</br>- Low latency</br>- Simple workflows</br>- YAML config|- Data pipelines</br>- Complex logic</br>- Batch jobs</br>- Python config + dev</br>- Orchestrating multi-cloud</br>- Apache Airflow|- Event-driven tasks</br>- Serverless</br>- Small, focused functions</br>- Rapid development</br>- Programming languages (inc. Python)|
+
+## Cloud Data Fusion 
+- Data Fusion is a fully-managed data integration service for quickly building and managing data pipelines
+- Claim to fame is that it provides a point-and-click Ul to transform/wrangle data and create pipelines. primary function is to facilitate the manipulation and organization of data through a user-friendly interface.
+- Can connect to other clouds, SaaS products, and on-prem systems
+- Create data marts, warehouses, data lakes
+- Allows for connecting and transforming data, making it easier to prepare and manage data for various analytics needs
+
+**Some feature/sub-products highlights:**
+- Pipeline Studio: Designing developing and managing data pipelines. Design and development of data pipelines take place here. env that supports the building of ETL processes to manage the lifecycle of the data workflows
+- Wrangler: Data preparation and exploration, code-free env for data transformation and exploration
+- Datastream:
+  - serverless, fully-managed **change data capture and data replication service** in Data Fusion
+  - designed to manage the process of detecting and capturing changes made to a database and then replicating that data to another location. 
+  - particularly useful for keeping data synchronized across different environments, such as replicating data from an on-premises database to a cloud platform like Google Cloud Platform (GCP).
+  - If you have an on-prem database that you want to replicate to GCP, Datastream is a great choice. E.g. on-prem Oracle database replication to BigQuery. captures the on-prem DB updates onto GCP
+
+## Dataform
+- Tool for **managing data transformation workflows** in BigQuery.
+- Key Features: SQL-based data transformations, version control integration, and workflow automation.
+- Enhanced data quality (got assertion checks to check the data quality), streamlined ETL processes (hence increases efficiency and reliability), and collaborative workflow management.
+  - allows for the implementation of assertions and tests as part of the data transformation process, which is crucial in maintaining the integrity and reliability of data models, especially in scenarios where data accuracy is critical.
+- Ideal for data warehousing, building data models, and automating complex data engineering tasks.
+- Seamless integration with other GCP services for a cohesive data engineering ecosystem.
+
+## Dataprep
+- Tool for visually **exploring, cleaning, and preparing data** for analysis in GCP.
+- Powered by Trifacta
+- Key Features: Intuitive user interface, automatic data schema detection, and pattern recognition for data cleansing and transformation.
+  - Good for large datasets where manual data cleaning is cumbersome and prone to errors
+- Accelerates data preparation processes, ensures data quality, and enhances productivity for data analysts and scientists.
+- Ideal for preparing raw data for analytics, machine learning, and business intelligence.
+- Seamless integration with BigQuery, Cloud Storage, Dataflow and other GCP data services.
+
+## Dataplex
+- Intelligent data fabric to manage data across different storage systems. 
+- Key functionalities: 
+  - unified data management, provides a consolidated view and control over data stored in different places (data lakes, warehouses, or operational databases)
+  - automated data lifecycle management, ensuring data is relevant, accessible and in the right format for analytical workloads 
+  - can integrate data sources and force security and governance policies and optimise data for analytics and AI
+  - single interface to manage data across different systems
+- Purpose: simplify data landscapes across data lakes, warehouses, and databases
+- Dataplex is commonly used for data meshes. Definition of a data mesh: a decentralized approach to data architecture and organizational design. Principles:
+  - Domain-oriented decentralized ownership and architecture.
+  - Data as a product: treating data as a valuable and usable asset.
+  - Self-serve data infrastructure: empowering domain teams to handle their data independently.
+  - Interoperability and standardization: ensuring data can be easily shared and used across domains.
+  - Goal: To enhance agility, scalability, and reliability in managing large and complex data ecosystems. With datamesh, organisation can respond quicker to market changes, scale their operations without a corresponding increase in complexity or risk, and ensure all the data infrastructure are robust and reliable. 
+- Dataplex provides tools and infrastructure for domain teams to independently manage and govern their data, thereby serving as an enabler for the data mesh architecture.
+
+**How Dataplex can build data mesh**
+- Dataplex as a facilitator/catalyst for data mesh architecture.
+- Providing tools and infrastructure for domain teams to manage and govern their data independently.
+- Interoperability: Seamlessly integrates with various data storage and processing services in GCP.
+- Governance and security: Centralized policy management in a decentralized environment.
+
+**Advantages of using Dataplex to create a data mesh**
+- Enhanced Data Governance: Unified policy administration and data security across all domains.
+- Scalability and Flexibility: Adapts to growing data needs and evolving organizational structures.
+- Streamlined Operations: Automates data discovery, metadata management, and lifecycle management.
+- Accelerated Insights: Facilitates quick access to data and integration with analytics tools for faster decision-making.
+
+## Data Catalog
+- Fully-managed and scalable metadata management service that allows organizations to quickly discover, manage, and understand their data in GCP.
+- Provides a centralized metadata repository and allows you to search for specific data (ex. column names) across all datasets and projects.
+- Metadata management: allow the creation, storing, management of metadata about GCP data resources, which helps in data discovery and governance. all datatypes (e.g. table schemas, object metadata, topic configurations (pub/sub), column families, cluster metrics, pipeline templates)
+- Data catalogue allows for data discovery and search easily across GCP services
+  - Use case: regulatory compliance audit to swiftly locate datasets tagged with personal information
+- Tagging and tag templates:
+  - Define custom metadata tags using tag templates, which can be applied to resources for categorization and governance
+  - Data Catalog's taxonomy and policy tags can be used within BQ/BigLake to enforce fine-grained (e.g. column-level) security policies, supporting a data mesh architecture.
+  - How it works: you can create tags in data catalogs and send the tags to where the data is stored (e.g. BQ, cloud storage, cloudSQL) for better governance actions to be taken. mainly to give tagging and visibility
+
+|**Data Catalog**|**Dataplex**|
+|---|---|
+|- Searchable inventory of all data assets</br>- Enhance data discovery/visibility</br>- Metadata tagging to improve data governance</br>- Supports data mesh architecture mainly through tagging and visibility</br>- Primarily supports GCP|- Automates data security, governance, and lifecycle management</br>- Suitable for complex environments where data needs to be accessible and governed at scale across diverse platforms</br>- Particularly valuable when you have data outside of GCP|
