@@ -507,4 +507,23 @@ LIKE SALTING, FIELD PROMOTION REQUIRES GOOD UNDERSTANDING OF THE ACCESS PATTERN 
 ## BigQuery Omni *LIKELY TO COME OUT FOR EXAM!*
 - intended to unify multi-cloud analytics. cause most companies now use more than 1 cloud provider, and they wanna see the analytics across
 - core feature: ability to analyse data across GCP, AWS, Azure without moving data
-- power by Google Cloud's Anthos, facilitating a seamless multi-cloud experience
+- power by Google Cloud's Anthos, facilitating a seamless multi-cloud experience for BQ to run analytics across different clouds as if they were a single env. Abstracts away the complexities of the different cloud structures, presenting a unified interface
+
+**Key Features**
+- <ins>Able to perform SQL queries on data stored in various cloud DIRECTLY from BQ's interface</ins>
+- Seamless intergration: uniform experience w BQ's standard SQL and tools, across different clouds. NO NEED TO LEARN DIFFERENT LANGUAGES OR DIFFERENT TOOLS
+- Data security: adheres to Google cloud's stringent security and privacy protocols, even across the different clouds
+- Cost-effective: Reduces the need for data movement, lowering costs and operational complexity
+
+**exam tip:** consider choosing BQ omni if given a scenario where there is a need to integrate data into BQ from multiple cloud platforms
+
+## Analytics Hub
+- centralised platform for data sharing and collab
+- launched in 2021 to address growing need for seamless and secure data exchange within and between orgs
+- enhances data accessibility and insights (can help to breakdown data silos)
+- has advanced security and privacy controls
+- scalable and reliable infrastructure
+- integration with GCP services (e.g. BigQuery, Looker Studio, etc)
+
+
+- has a publisher/subscriber model. subscriber will see a curated data that is linked to the publisher's
