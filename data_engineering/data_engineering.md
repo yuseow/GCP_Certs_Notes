@@ -450,7 +450,8 @@ PROJECT/DATASET LEVEL:
 - Developed internally for Google, then HBase (Hadoop, open source) was developed based on it. Now Bigtable works well with HBase, so devs can now migrate HBase workload to GCP managed Bigtable services without having to re-write their applications
 
 **Bigtable instance configuration**
-3 things to config when setting up:
+
+<ins>3 things to config when setting up:</ins>
 1. Instance type, either:
  - Dev env suggestion: 1 node, low cost, no replication
  - Prod env suggestion: 1+ clusters, 3+ nodes per cluster (for high availability and redundancy), replication available, throughput guarantee
@@ -695,3 +696,185 @@ whenever:
 |**Data Catalog**|**Dataplex**|
 |---|---|
 |- Searchable inventory of all data assets</br>- Enhance data discovery/visibility</br>- Metadata tagging to improve data governance</br>- Supports data mesh architecture mainly through tagging and visibility</br>- Primarily supports GCP|- Automates data security, governance, and lifecycle management</br>- Suitable for complex environments where data needs to be accessible and governed at scale across diverse platforms</br>- Particularly valuable when you have data outside of GCP|
+
+## Cloud Build
+- GCP's serverless CI/CD platform
+- can connect to source repos like Github or Gitbucket
+- can interact with the various GCP tools in containerised environments and ensure the build env is consistent and under your control
+- Key Features: 
+  - Automated builds, tests, and deployments
+  - integration with popular version control systems
+  - custom build steps with containerized tools
+- Code commit, build, test, and deploy
+- Can deploy to different env like Kubernetes engine, app engine, or another cloud provider
+- Benefits: Speed, scalability, and reliability in software development cycles.
+
+## Cloud Memorystore
+- Fully-managed (no-ops), in memory datastore service for GCP
+- High-performance, scalable Redis and/or Memcached; fully managed with automated sharding and failover, patch management. The automation of sharding, failover, and patch management by Cloud Memorystore streamlines operational tasks that are typically resource-intensive, thus enabling data engineers to concentrate on developing applications without being encumbered by such complexities.
+- Ideal for use cases requiring lightning fast/low latency data access, such as caching to accelerate data retrieval, session storage, and real-time analytics
+- Good for rapid read and write operations
+- Seamless integration with other GCP services, enhancing application performance
+- Improved application response times and reduced load on databases
+- Enable engineers to focus on application development rather than managing the datastore cause the experience to the user will be smoother and faster with memorystore
+- can be integrated with other GCP services like app engine, compute engine, so data can flow seamlessly across the cloud infrastructure
+- implementing memorystore can also help to reduce the load on the traditional databases cause it will store the cache of the data for faster retrieval
+- Hence improve response time of application, and reduce database load
+
+## Data Loss Prevention (DLP) API 
+- Powerful tool for discovering, classifying, and protecting sensitive data.
+- Features: Automated data recognition, has advanced risk analysis into how the data is being used and potential risks involved (good for mitigating potential data exposure risks), data redaction (or mask sensitive data), and de-identification.
+  - data redaction can help you easily share data to vendors/3rd party stakeholders easily
+- Use cases: Protecting (personal identifiable info) PII, (personal health info) PHI, and other sensitive information across various data stores and environments.
+- Regardless where in GCP is the data, the DLP can be applied (e.g. even in streamlining pipeline, cloud storage or BQ)
+- Integrates easily with existing applications and data pipelines. 
+  - The DLP API is easy to integrate into current applications and data pipelines due to its RESTful API design and the availability of client libraries in several widely-used programming languages, facilitating enhanced data security with minimal changes to existing systems.
+- Helps organizations meet compliance requirements like GDPR, HIPAA, etc. 
+  - The DLP API aids organizations in meeting compliance obligations by providing tools to discover, classify, and protect sensitive data, which is a requirement of regulations like GDPR and HIPAA that mandate careful handling of personal and health information.
+
+[Info about this and pricing](https://cloud.google.com/sensitive-data-protection/pricing#hybrid-pricing)
+
+## Cloud Org Policies
+- Org Policies are tools for centralized governance in Google Cloud Platform. Org policies service is a way to set and enforce consistent rules across the organisation's cloud resources. control and regulate how resources are utilised within the gcp env. 
+  - examples of controls: resource naming conventions, regional restrictions, or service usage limits
+- Ability to enforce organization-wide policies on resource usage and constraints.
+- Customizable policies to meet specific organizational requirements and compliance needs.
+- one of the key strength is flexibility, can be customised to align with specific needs and goals of the org (e.g. use cases: cost controls, security best practices, maintaining consistencies in resource deployment)
+  - additional use cases: can restrict external IP address creation, limit deployment to specific regions to comply with data residency need
+- Integration with Cloud Identity and Access Management (IAM) for comprehensive governance.
+
+
+## Cloud Key Management Service (KMS)
+- KMS: Key Management Service
+- Allows creation, usage, rotation and destruction of cryptographic keys
+- Encryption key management is cirtical for meeting industry regulations regarding data security and encryption
+- Types of keys:
+  1. Customer-managed encryption keys (CMEKs) --> most likely to appear in the exam
+    - Allow organizations to control their own encryption keys rather than using Google-managed keys, good when you need more control over key management, such as compliance with specific regulatory requirements
+    - Enable key management activities such as rotation, management, and revocation
+    - Common use cases: encrypt data stored in GCS, Compute Engine, and BigQuery datasets
+    - process: key creation --> Key usage --> Key Rotation (rotate the use of a few keys, not the same key all the time) --> key revocation
+  2. GMEK (Google-managed encryption keys)
+  3. CSEKs (Customer-supplied encryption keys)
+  4. Cloud HSM (Hardware Security Module) keys
+  5. Tink keys
+
+**Compromised CMEKs**
+- when CMEK is compromised, data must be re-encrypted with a new key
+- for cloud storage:
+  - copying all files from the current bucket to a new bucket, and assigning a new CMEK to the new bucket during the transfer
+- for BigQuery datasets:
+  - Create a new CMEK
+  - create new datasets configured to use the new CMEK key. 
+  - Copy all data from the old datasets to the new datasets without specifying a key as the new dataset is already configured with the new key
+
+## Cloud Logging
+- Enables you to store, search, analyse and alert on log data and events from google cloud resources and applications
+- formerly Stackdriver logging, part of the cloud observability suite
+- Integrates with Cloud Monitoring for analytics and automated alerts
+
+**Information contained in logs:**
+- Admin activity
+  - changes to IAM roles and permissions
+  - Security setting changes
+- Data access
+  - configuration/metadata of resources
+  - user-driven data aceess events
+- System events
+  - automatically generated logs from actions on your GCP resources
+- User logs from applications (compute engine VMs, app engine, etc)
+- Every action in GCP is captured in Cloud Logging
+
+**Retention period for logs**
+- Default period: 30 days retention
+- Custom configuration: options to configure a custom retention period or export for longer term storage are available
+- Applicability: includes audit logs, resource logs, user logs
+- Why it matters: retention period is important for compliance and cost management. there might be decisions to be made on how long to store and what to retent, balancing on needs and cost
+
+**Log sinks: export destinations for logs**
+- Log sinks = export destinations for your logs, based on specific filters (aka you set a filter to decide what will be stored at the sink)
+- Configuration examples:
+  - Store DAG execution logs in BigQuery from your Cloud Composer environment
+  - Store error logs from Compute Engine to a GCS bucket for long-term storage
+- Key Use Cases:
+  - Compliance and auditing: Ensure logs are retained per legal requirements
+  - Data analysis of logs in BigQuery for insights
+
+![log_sinks](images/gcp_log_sink.png)
+
+**Audit Logs**
+- usually of interest to the auditors, tracking user and system activities
+- Subset of logs managed by Cloud Logging: Tailored specifically for tracking user and system activities that have implications for security and compliance
+- Long-term retention of audit logs from multiple projects
+  - When retaining audit logs for compliance purposes, especially when you have multiple projects, a good option is to set up an export sink to a storage bucket with the Coldline storage class.
+  - Archive storage could be an option if retrieved once a year or less.
+
+## Cloud Monitoring
+- Collecting, analyzing, and visualizing metrics from GCP resources
+- Allows you to monitor the health and performance of your applications and infrastructure
+- Real-time metrics and alerts
+- Custom dashboards and reports
+- Along with Cloud Logging, part of the GCP Observability Suite
+- Formerly Stackdriver
+- Types of metrics:
+  - Infrastructure metrics: CPU utilisation, disk I/O, network traffic, memory usage
+  - Application metrics: response times, error rates, request rates, latency
+  - Custom metrics: business transaction metrics (transactions processed, orders completed), user-defined operational metrics
+  - External metrics: multi-cloud metrics (from AWS or Azure), on-prem system metrics
+  - System metrics: system load, running processes
+
+**Alerts & its configs**
+- Real-time alerts can be configured based on these metrics
+- Types of alerts:
+  - CPU utilization exceeding 90%
+  - Response time thresholds
+  - Error rate spikes
+  - Sudden downtick in # of users
+- Types of Notification:
+  - Email
+  - SMS/Text
+  - Third-party (Slack, PagerDuty)
+
+**Tracking cloud monitoring for multiple projects are possible**
+- If you want one Cloud Monitoring dashboard for multiple projects, you can set up a workspace in one of the projects and link the other projects to it.
+- E.g. Multiple departments within a company, using different projects but requiring a unified view of operations
+- How to Set Up: 
+  1. Select the primary project: set up or select an existing workspace in the main project
+  2. Link projects: add additional projects to this workspace through the Google Cloud Console
+
+## Networking tools
+### Virtual Private Cloud (VPC)
+- Cloud VPC is a comprehensive solution for managing internal and external networking in GCP.
+- Customizable IP address ranges, subnets, and routing; network security with firewalls and IAM integrations.
+- Configuration of public and private subnets for different workload needs.
+- Ability to grow and adapt to the changing needs of your applications
+- Integrates with other GCP network tools (IAM, firewall, compute, storage) for a seamless network experience.
+- VPC provides secure, scalable and flexible cloud computing
+
+**Additional exam tips:**
+- In GCP, **when you run out of IP addresses in a subnet, the most efficient solution is to increase the IP range of the existing subnet, provided the new range falls within the VPC's CIDR block**. This allows you to immediately allocate more IP addresses to Subnet A without significant changes to your infrastructure. Expanding the VPC's IP range or recreating the VPC with a larger IP range is not feasible because GCP does not allow for modification of the VPC's primary CIDR block once it is set. Adding a new subnet within the VPC can also provide additional IP addresses, but it does not directly address the shortage in Subnet A. Therefore, the most direct and least disruptive solution is to expand the IP range of Subnet A.
+- A single firewall rule can be applied to multiple Compute Engine instances. Firewall rules are configured at the network level and can be targeted to specific instances using tags or service accounts. By assigning the same tags or service accounts to multiple instances, you can ensure that the firewall rule applies to all of them. This approach simplifies the management of network security policies across several instances, eliminating the need to create individual rules for each one.
+- **Subnets in GCP are created at the regional level, not the zone level.** This means that when you create a subnet, it is available to all zones within the specified region. This regional scope allows for greater flexibility and redundancy, as resources within any zone of the region can utilize the subnet. Consequently, it is incorrect to say that subnets can be created at the zone level, as GCP's network architecture is designed to support subnets at the broader regional level.
+
+### Cloud NAT (Network Address Translation): simplifying outbound connectivity
+- NAT = Network Address Translation: Enables VM instances without public IP addresses to access the internet or connect to other services
+- Enhanced Security: Reduces attack surface by not assigning external IPs to VMs
+  - allows VMs to access the internet without assign them external IP addresses, reduces the attack surface
+- Automatic Scaling: Scales automatically with the number of VMs and the volume of network traffic
+- High Availability: Designed for high availability without any single point of failure
+- Cost-Effective: Reduces costs by controlling the external IP addresses used in the GCP environment
+- Simple Configuration: Easily configurable in Google Cloud Console with minimal management overhead
+- Overall good for securing the environment but allowing some outbound internet access
+
+### Cloud Firewall: Securing GCP networks
+- Network Protection: Provides firewall services for GCP resources. Guards against unauthorised access and other network threats
+- Customizable Rules: Allows configuration of rules to control network traffic. (both ingress and egress network traffic)
+- Layered Security: Works at both the **network** and **application** layers. Handles not just IP based address, but can handle more complex rules based on an application level protocol
+- Integrated with GCP Services: Compatible with Compute Engine, App Engine, and more.
+- Logging and Monitoring: Supports audit logs for network traffic analysis.
+- Automated Threat Detection: Utilizes threat intelligence for proactive security measures.
+
+**Additional exam tips:**
+- In GCP, firewall rules are evaluated based on their priority, with lower numbers indicating higher priority. The rule with the lowest priority number is applied first.
+The deny inbound rule for port 80 with a priority of 500 will take precedence over the allow rule with a priority of 1000. As a result, all inbound traffic on port 80 will be denied.
+The allow outbound rule for port 443 to destination 10.0.0.1 with a priority of 300 will take precedence over the deny rule with a priority of 800. Consequently, all outbound traffic on port 443 to destination 10.0.0.1 will be allowed.
