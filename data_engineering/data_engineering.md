@@ -131,6 +131,18 @@ Terms:
 - indicative of the overall load and throughput of the system. consistently high number can point to insufficient processing power on the subscriber's end or the publisher sending messages at a rate that the subscribers can't handle.
 2. Oldest unacknowledged message
 
+**Exam tips:**
+- Tracking the number of unacknowledged messages in Pub/Sub helps understand the backlog or processing delay in the source, indicating how effectively the pipeline is consuming messages. Monitoring the bytes used in Dataflow as a sink metric provides insight into the amount of data being processed and stored, reflecting the throughput and potential storage impact of the pipeline. This combination of metrics offers a comprehensive view of both the input and output performance of the pipeline.
+  - Tracking the number of unacknowledged messages in Pub/Sub and the number of elements added in Dataflow doesn't provide insight into the volume of data being processed. The number of elements added may not reflect data size or processing issues, which makes it less comprehensive for monitoring throughput and storage impact.
+  - Monitoring CPU utilization in Dataflow and the bytes used in Pub/Sub focuses on system resource usage, which may not directly indicate pipeline performance issues related to message consumption or data processing efficiency. CPU utilization alone doesn't account for message backlogs or data flow problems, which are critical in pipeline monitoring.
+  - Focusing on latency in Pub/Sub and the number of failed insertions in Dataflow overlooks important indicators like message backlogs and data throughput. While latency can help identify delays, it doesn't reflect how efficiently messages are consumed, and failed insertions don't capture the complete data-processing performance across the pipeline.
+- If a subscriber application was down for several hours, causing it to miss some critical messages, a strategy that allows the subscriber application to receive and process messages that it missed during downtime would be to to increase the message retention duration in the Pub/Sub topic and utilize the seek operation to replay missed messages.
+  - The message retention setting determines how long Pub/Sub retains undelivered messages in a topic before they are deleted. By increasing this duration, you ensure that messages sent during the subscriber's downtime are retained. When the subscriber application is back online, you can use the seek operation to reset the subscription's acknowledgment state to a timestamp in the past, allowing the subscriber to receive and process the messages that were published during its downtime. This approach ensures that no critical messages are lost due to temporary subscriber outages and provides a robust mechanism for message recovery.
+- Dead letter queues are used for messages that fail to be processed after a certain number of delivery attempts, not for replaying messages missed during downtime.
+- Using a pull subscription model and increasing the acknowledgment deadline would help in scenarios where the subscriber needs more time to process messages, but it doesn't solve the issue of replaying messages that were missed during the subscriber's downtime.
+- Implementing snapshot and seek functionality involves taking snapshots to capture the state of the subscription at a specific point in time, but this approach is more complex and requires manually managing the snapshots. 
+
+
 **Using Kafka with Pub/Sub**
 - May need to use when there are hybrid workloads (connecting on-prem database to GCP), collect logs from on-prem kafka and send to GCP for analysis or have an app in GCP but alsp store data on-prem using Kafka
 - GCP has a Pub/Sub Group Kafka Connector to connect Kafka to GCP. 2 versions of the connector, from the perspective of the role Pub/Sub plays in the setup
@@ -144,13 +156,14 @@ Terms:
 - Seeking to a <ins>time</ins> marks every message received before the time as acknowledged and every message after the time as unacknowledged
 - can set a topic message retention policy. max and default is 7 days
 
-## Parallet Data Processing - Cloud Dataflow
+## Parallel Data Processing - Cloud Dataflow
 - Dataflow is the GCP managed version of Apache BEAM (aka **B**atch/str**eam**). It is auto-scaling, serveless/no-ops.
 - Natively integrates with Pub/Sub, BigQuery
 - Connectors available for Bigtable, Apache Kafka
 - Pipelines must be located with a single region
 
 **Key Terms**
+
 Element = single entry of data (i.e. a row of data)
 PCollection = Distributed data set, data input and output
 ParDo = a type of transform applied to individual elements. ParDo is good for filtering/extracting elements from a large group of data
@@ -299,6 +312,12 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - Cost reduction through automated management
 - Deleting outdated or unnecessary data
 
+**Autoclass**
+- Autoclass is the most efficient and cost-effective approach for managing the varying access frequencies of your video content. 
+- Autoclass automatically transitions objects between storage classes based on real-time access patterns, optimizing storage costs without the need for manual lifecycle management policies. e.g. This means new objects that are frequently accessed will remain in Standard Storage, while older, less accessed objects will be automatically moved to cost-effective storage classes like Nearline or Coldline as access decreases.
+
+- Although lifecycle management policies can be used to move data between storage classes, they are not as good for situations with unpredictable and varied access patterns. Lifecycle management require manual setup and periodic adjustments to align with changing access patterns. Autoclass, by contrast, offers a more automated and dynamic solution, adjusting storage classes in real-time based on actual data usage without manual intervention, ensuring optimal storage cost savings with less effort.
+
 **Access control**
 - can have signed url access (time-based, got expiration, good for temporary access)
 - IAM on project level
@@ -309,6 +328,16 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - can also automatically trigger processes in other GCP services (e.g. cloud functions, pub/sub)
 - GCS as a dynamic component of data pipelines
 - workflow initiation upon data arrival
+
+**Cloud Turbo Replication**
+- Cloud Storage's Turbo Replication is specifically designed to provide near real-time, synchronous replication of data across regions. 
+  - Essential for scenarios like real-time financial transaction processing where having the most current data available in multiple regions is critical for both performance and disaster recovery. 
+- Turbo Replication ensures that data is replicated with minimal latency, allowing for rapid failover and high availability across different geographical locations. This is in contrast to standard GCS replication methods or custom scripting solutions, which might involve greater latencies or complexities in ensuring synchronous data replication.
+
+**Transferring data to cloud storage**
+- **Transfer Appliance** is specifically designed for large-scale data migrations when network capacity is a limiting factor, allowing you to transfer the data efficiently without relying on slow network speeds. Good for transferring from an on-premise server to cloud.
+- **gutil** will have bandwidth limitations and take too long for a 1 PB dataset. 
+- **Storage Transfer Service** good for cloud-to-cloud migrations and is not optimal for on-premises scenario.
   
 # Bigquery (BQ)
 - fully managed and serveless relational database
@@ -342,6 +371,7 @@ Consider storage duration and access frequency. Lower frequency access options, 
 - **Streaming Inserts**: Real-time data capture and analysis.
 - **Database Transfer Service**: Migrate data <ins>from on-premises or Cloud SQL</ins>.
 - **Federated Queries**: Query external sources without loading.
+- **Storage Write API**: ensures exactly-once delivery semantics
 
 When considering which way to load data, consider the size of the data, the need for real time updates, and complexity of the transformations
 
@@ -353,6 +383,10 @@ When considering which way to load data, consider the size of the data, the need
 - Performance Advantage: Columnar storage reduces data scan costs.
 - Simplified Management: Avoids multiple tables and complex joins.
 - JSON Integration: Seamlessly maps JSON structures to nested fields.
+
+<ins>Exam Tips:</ins>
+- For tightly coupled tables e.g.('sales_transactions' and 'sales_customers'), combining them into a single table with nested fields is a highly efficient approach in BigQuery. This method takes advantage of BigQuery's capabilities for handling nested and repeated fields, allowing for complex, relational data structures within a single table. It simplifies queries and can improve performance by reducing the need for JOIN operations.
+  - Implementing a BigQuery materialized view would improve query performance for certain cases, but it still requires separate tables and JOIN operations. For tightly coupled tables, nesting them into a single table is more efficient and eliminates the need for separate views or frequent JOINs.
 
 **Types of Backups**
 1. Automatic Replication: Data is automatically replicated across multiple locations, ensures high availability and durability.
@@ -448,6 +482,7 @@ PROJECT/DATASET LEVEL:
 - tables are sparse, empty cells table up no storage space. results in significant storage savings esp for datasets that have lots of optional fields
 - stores in key-value pair (think dictionary)
 - Developed internally for Google, then HBase (Hadoop, open source) was developed based on it. Now Bigtable works well with HBase, so devs can now migrate HBase workload to GCP managed Bigtable services without having to re-write their applications
+- Cloud Bigtable is highly efficient for storing and accessing large volumes of time series data, especially when queries are based on sensor ID and timestamp. Using sensorlD combined with timestamp as the row key optimizes data retrieval. For more complex analytical tasks, including joins, exporting the data to BigQuery provides the necessary tools and capabilities, making this approach versatile and effective for both querying and analytics.
 
 **Bigtable instance configuration**
 
@@ -602,7 +637,7 @@ whenever:
 
 
 ## Cloud Workflows
-- Fully0mamanged service that allows orchestration and automation of the execution of GCP services and HTTP-based APIs in a reliable, scalable, and serverless manner
+- Fully managed service that allows orchestration and automation of the execution of GCP services and HTTP-based APIs in a reliable, scalable, and serverless manner
 - Enables sequencing and execution of multiple cloud tasks, e.g.:
   - Calling a Cloud Function
   - Triggering a Cloud Run service
@@ -653,6 +688,7 @@ whenever:
 - Accelerates data preparation processes, ensures data quality, and enhances productivity for data analysts and scientists.
 - Ideal for preparing raw data for analytics, machine learning, and business intelligence.
 - Seamless integration with BigQuery, Cloud Storage, Dataflow and other GCP data services.
+- Dataprep offers a user-friendly, code-free interface for cleaning and preparing data, which is ideal for users who prefer not to code. Once finished, data from Dataprep can be easily exported to BigQuery. Connected Sheets allows for the integration of BigQuery data directly into Google Sheets, providing a familiar spreadsheet environment for creating and interacting with data visualizations. This combination caters to the needs of non-coding users who are comfortable with spreadsheets.
 
 ## Dataplex
 - Intelligent data fabric to manage data across different storage systems. 
@@ -720,6 +756,12 @@ whenever:
 - can be integrated with other GCP services like app engine, compute engine, so data can flow seamlessly across the cloud infrastructure
 - implementing memorystore can also help to reduce the load on the traditional databases cause it will store the cache of the data for faster retrieval
 - Hence improve response time of application, and reduce database load
+- if need to increase users with no decrease in performance, switching to a high availability mode in Cloud Memorystore for Redis provides enhanced performance and reliability, which is essential for handling a higher number of concurrent users. This mode typically offers better resource allocation and redundancy, ensuring that the increase in read-only traffic does not degrade performance.
+  - Switching to Memorystore with Memorycache while retaining 4GB of storage or opting for the standard tier is not ideal because Memorycache doesn't support a high availability mode like Redis. If the main concern is scaling to support more users, which requires high availability, making Redis in high availability mode is the better choice.
+-Implementing Memorystore for Redis in the Standard Tier offers high availability with automatic failover, which is critical for maintaining the session state and frequently accessed data reliably, especially during variable traffic conditions. This tier provides a replicated Redis setup, ensuring that the caching layer remains available even if one of the nodes fails. The Standard Tier's capabilities are well-suited for applications that require a resilient and scalable caching solution to handle traffic spikes and maintain consistent performance.
+- The Basic Tier lacks high availability features, making it unsuitable for scenarios requiring automatic failover and resilience during traffic spikes. It's better suited for simple, non-critical caching needs.
+- Memcached offers scalability and auto-discovery, but it doesn't provide high availability and failover protection.
+
 
 ## Data Loss Prevention (DLP) API 
 - Powerful tool for discovering, classifying, and protecting sensitive data.
@@ -760,7 +802,8 @@ whenever:
   5. Tink keys
 
 **Compromised CMEKs**
-- when CMEK is compromised, data must be re-encrypted with a new key
+- when CMEK is compromised, data must be re-encrypted with a new key. This method ensures that all files are re-encrypted and that the new encryption is applied effectively.
+  - Reassigning a new CMEK to the existing bucket without transferring the files does not automatically re-encrypt the files. Google Cloud Storage does not support re-encrypting existing data simply by switching the key. Data must be copied to re-encrypt it with the new key.
 - for cloud storage:
   - copying all files from the current bucket to a new bucket, and assigning a new CMEK to the new bucket during the transfer
 - for BigQuery datasets:
@@ -823,6 +866,7 @@ whenever:
   - External metrics: multi-cloud metrics (from AWS or Azure), on-prem system metrics
   - System metrics: system load, running processes
 
+
 **Alerts & its configs**
 - Real-time alerts can be configured based on these metrics
 - Types of alerts:
@@ -855,6 +899,9 @@ whenever:
 - In GCP, **when you run out of IP addresses in a subnet, the most efficient solution is to increase the IP range of the existing subnet, provided the new range falls within the VPC's CIDR block**. This allows you to immediately allocate more IP addresses to Subnet A without significant changes to your infrastructure. Expanding the VPC's IP range or recreating the VPC with a larger IP range is not feasible because GCP does not allow for modification of the VPC's primary CIDR block once it is set. Adding a new subnet within the VPC can also provide additional IP addresses, but it does not directly address the shortage in Subnet A. Therefore, the most direct and least disruptive solution is to expand the IP range of Subnet A.
 - A single firewall rule can be applied to multiple Compute Engine instances. Firewall rules are configured at the network level and can be targeted to specific instances using tags or service accounts. By assigning the same tags or service accounts to multiple instances, you can ensure that the firewall rule applies to all of them. This approach simplifies the management of network security policies across several instances, eliminating the need to create individual rules for each one.
 - **Subnets in GCP are created at the regional level, not the zone level.** This means that when you create a subnet, it is available to all zones within the specified region. This regional scope allows for greater flexibility and redundancy, as resources within any zone of the region can utilize the subnet. Consequently, it is incorrect to say that subnets can be created at the zone level, as GCP's network architecture is designed to support subnets at the broader regional level.
+- Assigning IAM roles at the project level can help control access within each project, but it doesn't provide the same level of isolation as VPC Service Controls. It doesn't prevent resources in one project from accessing resources in the other project.
+Deploying Cloud Functions to monitor and log access attempts and using Cloud IAM to block such attempts can provide monitoring and alerting capabilities, but it doesn't create a security perimeter around the projects to prevent data exfiltration or unauthorized access.
+  - Creating separate VPC networks and configuring firewall rules for each project can provide network-level isolation, but it doesn't prevent data exfiltration or access at the application and API level, which VPC Service Controls can achieve. Using VPC Service Controls, is the most appropriate choice because it creates a security perimeter around each project, preventing data exfltration and ensuring that resources in one project cannot access resources in the other project. This approach offers comprehensive security and isolation at both the network and application levels.
 
 ### Cloud NAT (Network Address Translation): simplifying outbound connectivity
 - NAT = Network Address Translation: Enables VM instances without public IP addresses to access the internet or connect to other services
@@ -876,5 +923,33 @@ whenever:
 
 **Additional exam tips:**
 - In GCP, firewall rules are evaluated based on their priority, with lower numbers indicating higher priority. The rule with the lowest priority number is applied first.
-The deny inbound rule for port 80 with a priority of 500 will take precedence over the allow rule with a priority of 1000. As a result, all inbound traffic on port 80 will be denied.
-The allow outbound rule for port 443 to destination 10.0.0.1 with a priority of 300 will take precedence over the deny rule with a priority of 800. Consequently, all outbound traffic on port 443 to destination 10.0.0.1 will be allowed.
+  - e.g. The deny inbound rule for port 80 with a priority of 500 will take precedence over the allow rule with a priority of 1000. As a result, all inbound traffic on port 80 will be denied. The allow outbound rule for port 443 to destination 10.0.0.1 with a priority of 300 will take precedence over the deny rule with a priority of 800. Consequently, all outbound traffic on port 443 to destination 10.0.0.1 will be allowed.
+- To set a blanket control on whether to allow external IP assignment by default, the best solution is to set an **organization policy that disallows external IPs on VM instances across all projects, with exceptions allowed for specific projects**. 
+  - Org policy provides centralized enforcement of the rule, ensuring that external IP addresses cannot be assigned by default, while still allowing flexibility for administrators to approve specific cases. 
+  - IAM roles could control VM creation but wouldn't directly prevent external IP assignment. 
+  - Firewall rules only manage traffic and wouldn't stop IPs from being assigned. 
+  - VPC Service Controls are designed for data protection rather than managing external IP assignment.
+
+
+# Additional Practice Questions Answered Wrongly
+1. Q: A financial institution uses Google Cloud's Dataproc service to run large-scale batch processing jobs for credit risk analysis. These jobs are split across multiple worker nodes, and the organization has strict firewall policies in place to ensure that only necessary traffic is allowed between nodes. Recently, the jobs have failed due to communication issues between Dataproc worker nodes. Your team is responsible for diagnosing and resolving this problem while maintaining compliance with the organization's security policies.
+What should you check to identify and resolve the communication issue between Dataproc worker nodes?
+    - A: The best approach is to verify if the firewall rules allow traffic on the necessary TCP ports for the network tag assigned to the Dataproc workers. Dataproc nodes require certain ports to be open to communicate effectively, and misconfigured firewall rules can block this traffic. Checking the network configuration or public IP addresses might not directly resolve internal communication issues. Incorrect network tags could also cause problems, but the tags only matter if they are conflicting with the firewall rules. So checking the ports and tags, as part of checking the firewall rules, is the best approach.
+2. Q: live data publish messages to a pub/sub topic. a Dataflow streaming job, built with Apache Beam SDK processes these messages. Occasionally there are data that FAILS VALIDATION due to missing or incorrect formats, and you need to route these invalid messages to separate pub/sub topic for monitoring and alerting? how to implement?
+    - A: The best solution is to set up an exception handler in the Dataflow pipeline to capture invalid messages and route them to a separate Pub/Sub topic. This allows for precise tracking and isolation of failed messages while maintaining a clean data pipeline. Retention of messages or snapshots would not provide the same level of monitoring for specific invalid messages, and **dead-letter queues are typically used for undeliverable messages, not for handling validation failures.**
+3. Q: Your logistics company stores data about deliveries, customer locations, and drivers in BigQuery. Deliveries and driver assignments can be updated daily, but you need to retain a complete historical record of all changes to deliveries, drivers, and customers for reporting purposes. The reporting system needs to easily display both current and historical data, and the solution must be cost-effective and simple to manage. What should you do?
+    - A: Using a denormalized table with nested and repeated fields allows you to maintain all related data in a single structure while keeping track of historical records through an ingestion timestamp. This method is cost-effective and simplifies querying for both current and historical data without needing complex joins or additional storage mechanisms. Normalizing the data into separate tables with snapshots would require more storage and querying complexity. Storing update files in Cloud Storage introduces unnecessary overhead for accessing and analyzing historical data.
+4. Q: Your healthcare organization uses a BigQuery dataset named "patient_data" to store patient records. Each table in the dataset is tagged with a Data Catalog tag template named "access_control" that includes a field called "is_sensitive" with a boolean value. You need all doctors and nurses to search for tables based on this field but ensure that only the compliance team can access tables where "is_sensitive" is true. You have assigned the bigquery.metadata Viewer and bigquery.connectionUser roles to all employees. You aim to minimize the configuration complexity. What should you do next?
+    - A: correct answer - Create the "access_control" tag template with public visibility. Assign the bigquery.data Viewer role to the compliance team on the tables that contain sensitive information.
+    - In this case, the best solution is to assign public visibility to the tag template so that all employees can search for tables based on whether or not they contain sensitive information. Public visibility allows the template's metadata to be visible to all users without giving them access to the actual data. Additionally, assigning the bigquery.data Viewer role only to the compliance team ensures that they are the only ones who can access the actual data in sensitive tables. Assigning private visibility to the template unnecessarily complicates things and limits discoverability for non-sensitive data.
+5. Q: You are managing a Cloud Dataflow pipeline that processes weather sensor data from multiple loT devices. The pipeline ingests this data from Pub/Sub, applies transformations, and then stores the results in BigQuery for downstream analysis. After running the pipeline for a week, you notice that some sensors are intermittently sending invalid readings due to hardware malfunctions. You need to ensure that only valid sensor data is written to BigQuery while filtering out the invalid readings, such as those where temperatures exceed an unrealistic threshold. How should you modify the Dataflow pipeline to achieve this?
+    - A: Add a ParDo transform in the pipeline to discard the invalid data.
+    - The best approach is to use a ParDo transform, which allows you to inspect each element in the pipeline and conditionally filter out invalid data based on your criteria. This method is efficient for handling data validity checks and removing problematic data before writing to BigQuery. Using a Sidelnput would introduce unnecessary complexity for this type of filtering. Grouping by key is unrelated to filtering based on content, and partitioning into separate outputs adds overhead when a simpler filtering mechanism can suffice.
+6. Q: You are managing a Dataflow job that processes financial transaction logs from a message queue, which does not guarantee exactly-once delivery. The job performs real-time transformations and streams the results into BigQuery. To ensure exactly-once delivery semantics in BigQuery, and given your expected data throughput of about 2 GB per second, what should you do?
+    - A: Use the BigQuery Storage Write API and configure the target table as regional because the Storage Write API ensures exactly-once delivery semantics, which is critical for accurate financial transaction processing. Configuring the table as regional reduces latency and improves performance. 
+    - The BigQuery Streaming API does not guarantee exactly-once delivery, making it unsuitable for this use case. Multiregional tables add unnecessary complexity and may introduce higher latency, especially when the throughput is high.
+7. Q: Your e-commerce company processes sensitive customer payment data, including credit card numbers and expiration dates, which needs to be securely stored in a database. The payment data must remain in a format that resembles the original numbers so that analysts can easily reference it for troubleshooting and reporting. The solution must comply with industry security standards and ensure that the data is protected from unauthorized access. Which technique should you use with Google Cloud's Data Loss Prevention (DLP) API to protect the sensitive data while maintaining its format?
+    - A: The best solution is to use Format-Preserving Encryption (FPE) with the FFX method. FPE allows the data to remain in the same format (such as preserving the length and structure of credit card numbers), while encrypting it to protect against unauthorized access. 
+    - Masking only partially protects the data and might leave too much exposed. Tokenization would replace the data entirely, making it harder for analysts to work with. Anonymization strips extra information unnecessarily and would make it less useful for analytics and reporting.
+8. Q: Your boss gives you a CSV file with 3 million records that need to be updated in BigQuery. You decide to use BigQuery UPDATE DML statements, but you receive a quotaExceeded error. What's the best way to avoid the error?
+    - A: The correct method involves importing the CSV data into a new BigQuery table and then merging this table with existing records. This approach avoids hitting BigQuery's quotas on DML operations, as individual record updates can quickly exceed these limits. It's also more efficient and cost-effective, as BigQuery is optimized for large-scale, set-based data operations rather than row-level updates. Additionally, this process ensures the atomicity of the update, maintaining data integrity by fully applying all changes or none.
